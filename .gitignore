@@ -1,0 +1,13 @@
+# Local deployment configuration and environment secrets
+config.runtime.js
+.env
+.env.*
+!.env.example
+
+# Local tooling
+node_modules/
+coverage/
+
+# macOS metadata files created on external drives
+._*
+.DS_Store

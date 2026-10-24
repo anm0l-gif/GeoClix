@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoClix — Tactical Satellite Forest Loss Dashboard</title>
+    <meta name="description" content="Live Sentinel-2 & Sentinel-1 SAR Forest Loss Alert Dashboard for India.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Dancing+Script:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,400;1,600&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/map.css">
+    <link rel="stylesheet" href="css/analysis.css">
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #020502;
+        }
+        .standalone-nav {
+            height: 54px;
+            background: rgba(4, 8, 4, 0.96);
+            border-bottom: 1px solid var(--border-accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 100;
+        }
+        .standalone-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+        .standalone-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid var(--border-accent);
+            color: var(--primary-green);
+        }
+        .map-app-container {
+            height: calc(100vh - 54px);
+            display: flex;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Tactical Header -->
+        <header class="standalone-nav">
+            <div class="standalone-brand">
+                <svg viewBox="0 0 32 32" width="24" height="24">
+                    <path d="M16 2C16 2 4 10 4 20C4 26 9 30 16 30C23 30 28 26 28 20C28 10 16 2 16 2Z" fill="#4ade80"/>
+                    <path d="M16 8V26M16 14L11 18M16 18L21 14" stroke="#166534" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span>Geo<span class="green-text">Clix</span> // SATELLITE COMMAND</span>
+            </div>
+
+            <div class="standalone-status">
+                <div class="api-status-badge status-pill" title="GeoClix Backend REST API Connectivity">
+                    <span class="live-dot" style="background:#10b981;"></span>
+                    <span>API: CONNECTED</span>
+                </div>
+                <div class="status-pill">
+                    <span class="live-dot"></span>
+                    <span>SENTINEL-2 (5-DAY REVISIT): ONLINE</span>
+                </div>
+                <div class="status-pill" style="border-color:#38bdf8;color:#38bdf8;background:rgba(56,189,248,0.1);">
+                    <span>📡 SAR RADAR: ACTIVE</span>
+                </div>
+                <a href="index.html" class="btn btn-outline" style="padding:6px 14px;font-size:0.75rem;">← Home</a>
+            </div>
+        </header>
+
+        <!-- Main Dashboard View -->
+        <div class="map-app-container">
+            <!-- Left Sidebar -->
+            <aside class="overview-sidebar" id="overview-sidebar">
+                <div class="sidebar-header">
+                    <h3>🛰️ Tactical Command</h3>
+                    <span class="live-badge"><span class="live-dot"></span> LIVE 24/7</span>
+                </div>
+
+                <!-- Coordinates -->
+                <div class="sidebar-section">
+                    <h4>📍 Target Coordinates</h4>
+                    <div class="coord-display" id="overview-coords">
+                        <div class="coord-row">
+                            <span class="coord-label">Latitude</span>
+                            <span class="coord-value" id="ov-lat">22.8021° N</span>
+                        </div>
+                        <div class="coord-row">
+                            <span class="coord-label">Longitude</span>
+                            <span class="coord-value" id="ov-lng">80.6015° E</span>
+                        </div>
+                        <div class="coord-row">
+                            <span class="coord-label">Elevation</span>
+                            <span class="coord-value" id="ov-elevation">520 m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forest Intelligence (Replacing Climate/AQI) -->
+                <div class="sidebar-section">
+                    <h4>🌲 Forest Canopy Intelligence</h4>
+                    <div class="forest-metrics-grid">
+                        <div class="forest-metric-box">
+                            <span class="forest-metric-label">Canopy Density</span>
+                            <span class="forest-metric-val" id="ov-canopy">74.2%</span>
+                            <span class="forest-metric-status green-text">Very Dense</span>
+                        </div>
+                        <div class="forest-metric-box">
+                            <span class="forest-metric-label">Loss Velocity</span>
+                            <span class="forest-metric-val red-text" id="ov-loss">-3.4 km²</span>
+                            <span class="forest-metric-status red-text">High Alert</span>
+                        </div>
+                        <div class="forest-metric-box">
+                            <span class="forest-metric-label">Carbon Emitted</span>
+                            <span class="forest-metric-val" id="ov-carbon">16,420 t</span>
+                            <span class="forest-metric-status" style="color:#f59e0b;">CO₂ Equivalent</span>
+                        </div>
+                        <div class="forest-metric-box">
+                            <span class="forest-metric-label">Loss Driver</span>
+                            <span class="forest-metric-val red-text" id="ov-driver">MINING</span>
+                            <span class="forest-metric-status red-text">Excavation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Health Indices -->
+                <div class="sidebar-section">
+                    <h4>📊 Multi-Sensor Health Indices</h4>
+                    <div class="env-summary" id="ov-env">
+                        <div class="env-bar">
+                            <div class="env-bar-header">
+                                <span class="env-label">NDVI Vegetation Health</span>
+                                <span class="env-value" id="ov-ndvi-val">0.78 (Healthy)</span>
+                            </div>
+                            <div class="progress-bar ndvi">
+                                <div class="progress-fill" id="ov-ndvi-bar" style="width:78%"></div>
+                            </div>
+                        </div>
+
+                        <div class="env-bar">
+                            <div class="env-bar-header">
+                                <span class="env-label">LandTrendr Confidence</span>
+                                <span class="env-value green-text" id="ov-landtrendr-val">96.8% Agreement</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width:96.8%"></div>
+                            </div>
+                        </div>
+
+                        <div class="env-bar">
+                            <div class="env-bar-header">
+                                <span class="env-label">Thermal Fire Risk (FIRMS)</span>
+                                <span class="env-value red-text" id="ov-fire-risk">Elevated Burn Scar</span>
+                            </div>
+                            <div class="progress-bar fire">
+                                <div class="progress-fill" id="ov-fire-bar" style="width:68%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-hint">
+                    <p>⚡ CLICK ANY RED HOTSPOT OR MAP POINT TO LAUNCH "THEN VS NOW" SPLIT ANALYSIS</p>
+                </div>
+            </aside>
+
+            <!-- Main Map Viewport with DISTINCT BORDER -->
+            <main class="overview-map-wrapper">
+                <div id="main-map" class="main-map"></div>
+
+                <!-- Map Controls -->
+                <div class="map-controls">
+                    <div class="map-layer-switcher">
+                        <button class="layer-btn active" data-layer="satellite" title="Sentinel-2 Optical (10m)">🛰️</button>
+                        <button class="layer-btn" data-layer="forest" title="Sentinel-2 Cloudless Mosaic">🌲</button>
+                        <button class="layer-btn" data-layer="sar" title="Sentinel-1 SAR Radar (Monsoon)">📡</button>
+                        <button class="layer-btn" data-layer="terrain" title="Topographic OpenStreetMap">🗺️</button>
+                    </div>
+
+                    <div class="map-overlays-toggle">
+                        <label class="map-toggle">
+                            <input type="checkbox" id="toggle-fires" checked>
+                            <span class="toggle-dot"></span>
+                            <span>🔥 Active Fires</span>
+                        </label>
+                        <label class="map-toggle">
+                            <input type="checkbox" id="toggle-alerts" checked>
+                            <span class="toggle-dot"></span>
+                            <span>⚠️ Forest Loss Alerts</span>
+                        </label>
+                        <label class="map-toggle">
+                            <input type="checkbox" id="toggle-ndvi" checked>
+                            <span class="toggle-dot"></span>
+                            <span>🌿 NDVI Heatmap</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Map Info Bar -->
+                <div class="map-info-bar" id="map-info-bar">
+                    <span id="map-info-text">Hover to track geospatial coordinates • Click any location or alert to compare imagery</span>
+                </div>
+            </main>
+        </div>
+
+        <!-- ==================== ANALYSIS OVERLAY (SCREEN 3) ==================== -->
+        <div id="analysis-view" class="analysis-overlay hidden">
+            <button class="analysis-close" id="analysis-close" aria-label="Close analysis">
+                <span>← Back to Tactical Map</span>
+            </button>
+
+            <div class="analysis-container">
+                <!-- A. Left Sidebar -->
+                <aside class="analysis-sidebar">
+                    <div class="sidebar-section">
+                        <h4>📍 Target Reserve</h4>
+                        <div class="region-info">
+                            <p class="region-name" id="an-region-name">Corbett Landscape Buffer</p>
+                            <p class="region-state" id="an-region-state">Uttarakhand, India</p>
+                            <p class="region-area" id="an-region-area">29.5937° N, 78.9629° E</p>
+                        </div>
+                    </div>
+
+                    <!-- Forest Canopy Intelligence -->
+                    <div class="sidebar-section">
+                        <h4>🌲 Canopy Loss Audit</h4>
+                        <div class="canopy-intel-grid">
+                            <div class="canopy-intel-item">
+                                <span class="canopy-intel-label">Baseline Canopy (2018)</span>
+                                <span class="canopy-intel-val">94.8%</span>
+                                <span class="canopy-intel-sub positive">Dense Canopy</span>
+                            </div>
+                            <div class="canopy-intel-item">
+                                <span class="canopy-intel-label">Current Canopy (2024)</span>
+                                <span class="canopy-intel-val red-text">56.4%</span>
+                                <span class="canopy-intel-sub negative">-38.4% Deforested</span>
+                            </div>
+                            <div class="canopy-intel-item">
+                                <span class="canopy-intel-label">Carbon Released</span>
+                                <span class="canopy-intel-val red-text">24,800 t</span>
+                                <span class="canopy-intel-sub negative">CO₂ Biomass Loss</span>
+                            </div>
+                            <div class="canopy-intel-item">
+                                <span class="canopy-intel-label">Primary Driver</span>
+                                <span class="canopy-intel-val red-text">MINING / ROAD</span>
+                                <span class="canopy-intel-sub negative">Bulldozer Clear</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 10-Year Trend Graph -->
+                    <div class="sidebar-section">
+                        <h4>📈 10-Year Forest Cover Trend</h4>
+                        <div class="chart-container">
+                            <canvas id="forest-chart"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item gain">● Forest Gain</span>
+                            <span class="legend-item loss">● Forest Loss</span>
+                        </div>
+                    </div>
+
+                    <!-- Key Event Markers -->
+                    <div class="sidebar-section">
+                        <h4>📅 Historical Environmental Milestones</h4>
+                        <div class="events-timeline" id="events-timeline">
+                            <div class="event-item mining">
+                                <span class="event-year">2024</span>
+                                <span class="event-text">Active Open-Cast Mining Expanded (3.4 km²)</span>
+                            </div>
+                            <div class="event-item fire">
+                                <span class="event-year">2022</span>
+                                <span class="event-text">Major Forest Fire Scarring Detected (NASA FIRMS)</span>
+                            </div>
+                            <div class="event-item drought">
+                                <span class="event-year">2020</span>
+                                <span class="event-text">Severe Moisture Stress & Canopy Thinning</span>
+                            </div>
+                            <div class="event-item flood">
+                                <span class="event-year">2018</span>
+                                <span class="event-text">Baseline Undisturbed Dense Forest Classification</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- B. Main Visualizer: Side-by-Side Split View -->
+                <div class="analysis-main">
+                    <!-- Comparison Header -->
+                    <div class="comparison-header">
+                        <div class="pane-label then-label">
+                            <span class="pane-tag">THEN (BASELINE)</span>
+                            <input type="date" id="then-date" class="date-input" value="2018-01-15" min="2016-01-01" max="2026-12-31">
+                        </div>
+                        <div class="date-quick-presets">
+                            <span class="preset-label">Quick Presets:</span>
+                            <button type="button" class="preset-btn active" onclick="setPresetDates('2018-01-15', '2024-10-21')">2018 vs 2024 (Full Loss)</button>
+                            <button type="button" class="preset-btn" onclick="setPresetDates('2018-01-15', '2021-06-20')">2018 vs 2021 (Road Cut)</button>
+                            <button type="button" class="preset-btn" onclick="setPresetDates('2020-01-15', '2024-10-21')">2020 vs 2024 (Mining Peak)</button>
+                        </div>
+                        <div class="pane-label now-label">
+                            <span class="pane-tag">NOW (ALERT DETECTED)</span>
+                            <input type="date" id="now-date" class="date-input" value="2024-10-21" min="2016-01-01" max="2026-12-31">
+                        </div>
+                    </div>
+
+                    <!-- Split View Container with DISTINCT BORDER -->
+                    <div class="split-view-container" id="split-view-container">
+                        <!-- THEN PANE (Undisturbed Green Forest) -->
+                        <div class="split-pane then-pane" id="then-pane">
+                            <div id="then-map" class="split-map"></div>
+                            <!-- Translucent Pill Tag -->
+                            <div class="map-pill-tag" id="then-pill-tag" style="bottom:12px;left:12px;color:#38bdf8;border-color:rgba(56,189,248,0.3);">
+                                🌿 Reference: Undisturbed Canopy (2018)
+                            </div>
+                        </div>
+
+                        <!-- DRAGGABLE DIVIDER -->
+                        <div class="split-divider" id="split-divider">
+                            <div class="divider-line"></div>
+                            <div class="divider-handle">
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path d="M8 5l-5 7 5 7M16 5l5 7-5 7" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="divider-line"></div>
+                        </div>
+
+                        <!-- NOW PANE (Visible Deforestation Scar) -->
+                        <div class="split-pane now-pane" id="now-pane">
+                            <div id="now-map" class="split-map"></div>
+                            <!-- Translucent Pill Tag -->
+                            <div class="map-pill-tag" id="now-pill-tag" style="bottom:12px;right:12px;color:#ef4444;border-color:rgba(239,68,68,0.3);">
+                                ⚠️ Present: Deforestation Scar Detected
+                            </div>
+                        </div>
+
+                        <!-- Translucent Checkbox Overlays over Imagery -->
+                        <div class="overlay-toggles">
+                            <label class="overlay-checkbox" id="overlay-clouds">
+                                <input type="checkbox" id="clouds-toggle">
+                                <span class="overlay-label">Clouds Layer</span>
+                            </label>
+                            <label class="overlay-checkbox" id="overlay-sar">
+                                <input type="checkbox" id="sar-toggle" checked>
+                                <span class="overlay-label">Sentinel-1 SAR Radar</span>
+                            </label>
+                            <label class="overlay-checkbox" id="overlay-scars">
+                                <input type="checkbox" id="scars-toggle" checked>
+                                <span class="overlay-label">Deforestation Boundary</span>
+                            </label>
+                        </div>
+
+                        <!-- Super-Resolution Indicator Badge -->
+                        <div class="super-res-hud" id="super-res-hud">
+                            <span>RESOLUTION: 10m NATIVE [SENTINEL-2 MSI]</span>
+                        </div>
+                    </div>
+
+                    <!-- C. Three Bottom Action Boxes -->
+                    <div class="action-bar">
+                        <!-- Box 1: Coordinates -->
+                        <div class="action-box" id="geo-action-box">
+                            <div class="action-box-icon">📍</div>
+                            <div class="action-box-title">Geospatial Coordinates</div>
+                            <div class="action-box-content">
+                                <div class="geo-row">
+                                    <span>Latitude</span>
+                                    <span class="geo-val" id="detail-lat">29.5937° N</span>
+                                </div>
+                                <div class="geo-row">
+                                    <span>Longitude</span>
+                                    <span class="geo-val" id="detail-lng">78.9629° E</span>
+                                </div>
+                                <div class="geo-row">
+                                    <span>Elevation</span>
+                                    <span class="geo-val" id="detail-alt">680 m</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Box 2: Enhance Resolution (Working Super-Resolution) -->
+                        <div class="action-box" id="enhance-action-box">
+                            <div class="action-box-icon">🔍</div>
+                            <div class="action-box-title">Enhance Resolution</div>
+                            <div class="action-box-content">
+                                <p class="enhance-desc">AI ESRGAN 4x super-resolution upscaling (10m → 2.5m GSD)</p>
+                                <button class="enhance-btn" id="enhance-btn">
+                                    <span class="enhance-btn-text">Upscale to 2.5m Super-Resolution</span>
+                                    <span class="enhance-spinner hidden" id="enhance-spinner"></span>
+                                </button>
+                                <div class="enhance-status" id="enhance-status"></div>
+                            </div>
+                        </div>
+
+                        <!-- Box 3: Historical Transition Video -->
+                        <div class="action-box" id="timelapse-action-box">
+                            <div class="action-box-icon">⏯️</div>
+                            <div class="action-box-title">Historical Transition Video</div>
+                            <div class="action-box-content">
+                                <div class="tl-controls">
+                                    <button class="tl-btn" id="tl-prev" title="Step Back">⏮ Prev</button>
+                                    <button class="tl-btn tl-play-btn" id="tl-play" title="Play Video Transition">▶ Play Transition Video</button>
+                                    <button class="tl-btn" id="tl-next" title="Step Forward">Next ⏭</button>
+                                </div>
+                                <div class="tl-progress">
+                                    <input type="range" id="tl-slider" min="0" max="10" value="0" step="1" class="tl-range">
+                                    <div class="tl-years">
+                                        <span>Post Date (Baseline)</span>
+                                        <span id="tl-current-year">Jan 2018 (95% Canopy)</span>
+                                        <span>Present Date</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Range Comparison Bar -->
+                    <div class="date-range-bar">
+                        <div class="date-range-group">
+                            <label class="date-label">FROM</label>
+                            <input type="date" id="range-from" class="date-input" value="2018-01-15">
+                        </div>
+                        <div class="date-range-group">
+                            <label class="date-label">TILL</label>
+                            <input type="date" id="range-to" class="date-input" value="2024-10-21">
+                        </div>
+                        <button class="btn btn-primary compare-btn" id="compare-btn">
+                            Apply Date Range Comparison ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast hidden">
+            <div class="toast-icon" id="toast-icon">ℹ️</div>
+            <div class="toast-message" id="toast-message"></div>
+            <button class="toast-close" id="toast-close">✕</button>
+        </div>
+    </div>
+
+    <!-- CDN Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/coordinates.js"></script>
+    <script src="js/satellite.js"></script>
+    <script src="js/fires.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/analysis.js"></script>
+    <script src="js/timelapse.js"></script>
+    <script src="js/ai-enhance.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        window.setPresetDates = function (thenDate, nowDate) {
+            var thenInput = document.getElementById('then-date');
+            var nowInput  = document.getElementById('now-date');
+            if (thenInput) thenInput.value = thenDate;
+            if (nowInput)  nowInput.value  = nowDate;
+            if (window.GeoClixAnalysis) {
+                GeoClixAnalysis.updateDateImagery();
+            }
+            if (window.GeoClixTimelapse) {
+                GeoClixTimelapse.buildFramesFromDates();
+            }
+            document.querySelectorAll('.preset-btn').forEach(function (btn) {
+                btn.classList.remove('active');
+            });
+            if (window.event && window.event.target) {
+                window.event.target.classList.add('active');
+            }
+        };
+    </script>
+</body>
+</html>

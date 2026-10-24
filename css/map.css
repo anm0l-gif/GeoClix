@@ -1,0 +1,367 @@
+/* ==========================================================================
+   GeoClix — Overview Section & Interactive Map Styles
+   Refined Dark Glassmorphism, Curved Edges (10px), Translucent Floating Controls
+   ========================================================================== */
+
+#overview {
+    padding: 0;
+    min-height: 100vh;
+    background: #070a08;
+    position: relative;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.overview-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    padding: 14px;
+    gap: 14px;
+    background: #050806;
+}
+
+/* ==================== OVERVIEW SIDEBAR ==================== */
+.overview-sidebar {
+    width: var(--sidebar-width);
+    min-width: 360px;
+    height: 100%;
+    background: rgba(14, 20, 16, 0.88);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    z-index: 10;
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(16px);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.sidebar-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary-green);
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    padding: 3px 8px;
+    border-radius: var(--radius-xs);
+}
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--primary-green);
+    box-shadow: 0 0 6px var(--primary-green);
+    animation: livePulse 1.2s infinite;
+}
+@keyframes livePulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.3); }
+}
+
+.sidebar-section {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+.sidebar-section h4 {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Coordinate Display */
+.coord-display {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.coord-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.86rem;
+}
+.coord-label {
+    color: var(--text-faint);
+    font-size: 0.78rem;
+}
+.coord-value {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--primary-green);
+}
+
+/* Forest Intelligence Metrics Grid */
+.forest-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.forest-metric-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-xs);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.forest-metric-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.forest-metric-val {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+}
+.forest-metric-status {
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+/* Environmental Summary Bars */
+.env-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.env-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.env-bar-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.76rem;
+}
+.env-label {
+    color: var(--text-muted);
+}
+.env-value {
+    font-weight: 600;
+    color: #fff;
+}
+.progress-bar {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--primary-green);
+    border-radius: 3px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.progress-bar.ndvi .progress-fill {
+    background: #84cc16;
+}
+.progress-bar.fire .progress-fill {
+    background: var(--alert-red);
+}
+
+.sidebar-hint {
+    margin-top: auto;
+    padding: 12px;
+    background: rgba(34, 197, 94, 0.06);
+    border: 1px dashed rgba(34, 197, 94, 0.25);
+    border-radius: var(--radius-sm);
+    text-align: center;
+}
+.sidebar-hint p {
+    font-size: 0.78rem;
+    color: var(--primary-green);
+    font-weight: 600;
+}
+
+/* ==================== OVERVIEW MAP WRAPPER ==================== */
+/* CURVED EDGES & SUBTLE REFINED BORDER AROUND THE MAP */
+.overview-map-wrapper {
+    flex-grow: 1;
+    height: 100%;
+    position: relative;
+    background: #030604;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.main-map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* TRANSLUCENT CONTROLS OVER MAP (BECOMES OPAQUE ON HOVER / ACTIVE) */
+.map-controls {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.map-layer-switcher {
+    display: flex;
+    background: rgba(14, 20, 16, 0.45);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    backdrop-filter: blur(12px);
+    opacity: 0.68;
+    transition: var(--transition);
+}
+.map-layer-switcher:hover,
+.map-layer-switcher:focus-within {
+    opacity: 1;
+    background: rgba(14, 20, 16, 0.92);
+    border-color: var(--border-accent);
+}
+
+.layer-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: var(--transition);
+}
+.layer-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+.layer-btn.active {
+    background: var(--primary-green);
+    color: #041407;
+}
+
+.map-overlays-toggle {
+    display: flex;
+    gap: 12px;
+    background: rgba(14, 20, 16, 0.45);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    backdrop-filter: blur(12px);
+    opacity: 0.68;
+    transition: var(--transition);
+}
+.map-overlays-toggle:hover,
+.map-overlays-toggle:focus-within {
+    opacity: 1;
+    background: rgba(14, 20, 16, 0.92);
+    border-color: var(--border-accent);
+}
+
+.map-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    user-select: none;
+}
+.map-toggle input {
+    display: none;
+}
+.toggle-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: var(--transition);
+}
+.map-toggle input:checked + .toggle-dot {
+    background: var(--primary-green);
+    box-shadow: 0 0 6px var(--primary-green);
+}
+.map-toggle input:checked ~ span {
+    color: #fff;
+}
+
+/* TRANSLUCENT INFO BAR AT BOTTOM OF MAP */
+.map-info-bar {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    background: rgba(14, 20, 16, 0.75);
+    border: 1px solid var(--border-subtle);
+    padding: 6px 20px;
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(12px);
+    font-size: 0.82rem;
+    color: var(--text-main);
+    pointer-events: none;
+    opacity: 0.88;
+}
+
+/* Deforestation Scar Visual Effects on Map */
+.deforestation-scar-polygon {
+    stroke: #ef4444;
+    stroke-width: 2;
+    stroke-dasharray: 5 3;
+    fill: #dc2626;
+    fill-opacity: 0.45;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+    .overview-container {
+        flex-direction: column;
+        height: auto;
+    }
+    .overview-sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: 380px;
+    }
+    .overview-map-wrapper {
+        height: 520px;
+    }
+}

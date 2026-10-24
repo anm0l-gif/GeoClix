@@ -1,0 +1,394 @@
+/* ==========================================================================
+   GeoClix — Global Styles & Design System
+   Professional Dark Luxury, Refined Emerald & Sage, Soft Natural Curves (8-10px)
+   ========================================================================== */
+
+:root {
+    /* Refined Natural Palette — NOT Cheap Bright Neon */
+    --bg-main: #080c09;
+    --bg-dark: #050806;
+    --bg-surface: rgba(18, 24, 20, 0.6);
+    --bg-surface-hover: rgba(24, 34, 28, 0.85);
+    --bg-glass: rgba(14, 20, 16, 0.5);
+    --bg-glass-heavy: rgba(10, 15, 12, 0.82);
+
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-accent: rgba(16, 185, 129, 0.22);
+    --border-emerald: #10b981;
+    --border-faint: rgba(255, 255, 255, 0.04);
+
+    /* Darker, sophisticated forest green tones */
+    --primary-green: #10b981;
+    --primary-muted: #059669;
+    --primary-soft: #34d399;
+    --dark-green: #064e3b;
+    --deep-green: #022c22;
+    --glow-subtle: rgba(16, 185, 129, 0.15);
+
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-faint: #64748b;
+    --text-translucent: rgba(255, 255, 255, 0.45);
+
+    --alert-red: #ef4444;
+    --alert-soft: rgba(239, 68, 68, 0.15);
+    --warning-amber: #f59e0b;
+    --info-blue: #38bdf8;
+
+    /* Typography */
+    --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-cursive: 'Caveat', 'Dancing Script', 'Playfair Display', cursive, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+
+    /* Spacing & Layout */
+    --nav-height: 72px;
+    --sidebar-width: 380px;
+
+    /* TASTEFUL SOFT CURVES */
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px;
+
+    /* Shadows & Transitions */
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+    --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base Resets */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Elegant Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #050806;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.22);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-green);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.18;
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+button {
+    font-family: var(--font-heading);
+    cursor: pointer;
+    border: none;
+    outline: none;
+    background: none;
+    transition: var(--transition);
+}
+
+input, select {
+    font-family: var(--font-body);
+    color: inherit;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    outline: none;
+    transition: var(--transition);
+}
+input:focus, select:focus {
+    border-color: var(--primary-green);
+    box-shadow: 0 0 10px var(--glow-subtle);
+}
+
+/* Cursive / Editorial Styles for Hero Title */
+.font-cursive {
+    font-family: var(--font-cursive) !important;
+    font-style: italic !important;
+    font-weight: 400 !important;
+}
+
+.font-modern {
+    font-family: var(--font-heading) !important;
+    font-weight: 700 !important;
+}
+
+/* Utility Classes */
+.green-text {
+    color: var(--primary-soft) !important;
+}
+
+.red-text {
+    color: var(--alert-red) !important;
+}
+
+.mono {
+    font-family: var(--font-mono);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* TRANSLUCENT CONTROLS & OPTIONS (WHEN NOT IN OPERATION) */
+.translucent-control {
+    opacity: 0.65;
+    background: rgba(16, 24, 18, 0.45);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+.translucent-control:hover,
+.translucent-control:focus-within,
+.translucent-control.active {
+    opacity: 1;
+    background: rgba(16, 24, 18, 0.88);
+    border-color: var(--border-accent);
+}
+
+/* Professional Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 26px;
+    font-family: var(--font-heading);
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    letter-spacing: 0.2px;
+}
+
+.btn-primary {
+    background: #059669;
+    color: #f8fafc;
+    border: 1px solid #10b981;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
+}
+.btn-primary:hover {
+    background: #10b981;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    transform: translateY(-2px);
+}
+
+.btn-outline {
+    background: rgba(18, 24, 20, 0.45);
+    color: var(--text-main);
+    border: 1px solid var(--border-subtle);
+    backdrop-filter: blur(8px);
+}
+.btn-outline:hover {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: var(--primary-green);
+    color: var(--primary-soft);
+    transform: translateY(-2px);
+}
+
+.btn-arrow {
+    display: inline-block;
+    transition: transform 0.25s ease;
+}
+.btn-primary:hover .btn-arrow {
+    transform: translateX(4px);
+}
+
+/* Shared Section Styling */
+.section {
+    padding: 90px 32px;
+    position: relative;
+    z-index: 1;
+}
+
+.section-container {
+    max-width: 1260px;
+    margin: 0 auto;
+}
+
+.section-tag {
+    display: inline-block;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--primary-soft);
+    background: rgba(16, 185, 129, 0.08);
+    padding: 5px 12px;
+    border-radius: var(--radius-xs);
+    border: 1px solid rgba(16, 185, 129, 0.18);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+}
+
+.section-title {
+    font-size: 2.8rem;
+    margin-bottom: 16px;
+    letter-spacing: -0.6px;
+}
+
+.section-subtitle {
+    font-size: 1.08rem;
+    color: var(--text-muted);
+    max-width: 680px;
+    margin-bottom: 44px;
+    line-height: 1.6;
+}
+
+/* Toast Notifications */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(14, 20, 16, 0.95);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    color: var(--text-main);
+    font-size: 0.88rem;
+    font-family: var(--font-body);
+    animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.toast-icon {
+    font-size: 1.2rem;
+}
+.toast-close {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-left: 8px;
+    cursor: pointer;
+}
+.toast-close:hover {
+    color: var(--primary-soft);
+}
+
+/* Translucent Controls & Options When Idle / Not In Operation */
+.translucent-control,
+.translucent-option {
+    opacity: 0.68;
+    background: rgba(16, 24, 20, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.translucent-control:hover,
+.translucent-control:focus,
+.translucent-control.active,
+.translucent-option:hover,
+.translucent-option:focus,
+.translucent-option.active {
+    opacity: 1;
+    background: rgba(16, 24, 20, 0.88);
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+/* Typography Helpers */
+.font-cursive {
+    font-family: var(--font-cursive);
+}
+.font-modern {
+    font-family: var(--font-heading);
+}
+
+/* API Status Pill */
+.api-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary-green);
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(8px);
+    transition: var(--transition);
+}
+
+/* Light Theme & Theme Toggle Support for Dashboard */
+html[data-theme="light"] {
+    --bg-main: #f4f8f4;
+    --bg-dark: #e8f2e9;
+    --bg-surface: rgba(255, 255, 255, 0.9);
+    --border-subtle: rgba(22, 101, 52, 0.18);
+    --border-accent: rgba(22, 101, 52, 0.42);
+    --text-main: #102216;
+    --text-muted: #496052;
+    --text-faint: #64748b;
+    --text-translucent: rgba(16, 34, 22, 0.58);
+}
+
+.theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.theme-toggle:hover { border-color: var(--primary-green); transform: translateY(-1px); }
+.theme-toggle:focus-visible { outline: 2px solid var(--primary-green); outline-offset: 2px; }

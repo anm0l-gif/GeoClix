@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoClix — Forest Intelligence Prototype</title>
+    <meta name="description" content="Dedicated satellite forest monitoring dashboard. Real-time dynamic stats, scatter alert markers, canopy trends, and multi-sensor overlays.">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+
+    <!-- Dashboard CSS & Analysis CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/analysis.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌲</text></svg>">
+</head>
+<body>
+
+    <!-- Top Dashboard Header -->
+    <header class="dash-header">
+        <a href="index.html" class="dash-brand">
+            <svg viewBox="0 0 32 32" width="28" height="28">
+                <path d="M16 2C16 2 4 10 4 20C4 26 9 30 16 30C23 30 28 26 28 20C28 10 16 2 16 2Z" fill="#4ade80"/>
+                <path d="M16 8V26M16 14L11 18M16 18L21 14" stroke="#064e3b" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <div class="dash-brand-title">GEO<span>CLIX</span></div>
+                <div class="dash-tagline">Forest Intelligence System</div>
+                <div class="dash-demo-notice">Prototype — simulated values are labelled in the documentation</div>
+            </div>
+        </a>
+
+        <!-- Region Selector Dropdown -->
+        <div class="dash-region-selector">
+            <span>📍 Region:</span>
+            <select id="region-select" class="region-select-input">
+                <option value="madhya-pradesh">Madhya Pradesh (Central India)</option>
+                <option value="western-ghats">Western Ghats (Biodiversity Hotspot)</option>
+                <option value="assam">Assam & Karbi Anglong</option>
+                <option value="odisha">Similipal Forest, Odisha</option>
+                <option value="uttarakhand">Jim Corbett, Uttarakhand</option>
+                <option value="sundarbans">Sundarbans Mangroves</option>
+            </select>
+        </div>
+
+        <div class="dash-header-actions">
+            <button type="button" class="theme-toggle dashboard-theme-toggle" data-theme-toggle aria-pressed="false">
+                <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
+                <span class="theme-toggle-label">Dark mode</span>
+            </button>
+            <a href="index.html" class="dash-btn">← Back to Overview</a>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Workspace -->
+    <main class="dash-body">
+
+        <!-- Left Navigation Sidebar -->
+        <aside class="dash-sidebar">
+            <div class="sidebar-menu-group">
+                <div class="menu-label">Workspace</div>
+                <button type="button" class="menu-item active" data-view="dashboard" aria-pressed="true">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button type="button" class="menu-item" data-view="forest-cover" aria-pressed="false">
+                    <span class="icon">🌲</span>
+                    <span>Forest Cover</span>
+                </button>
+                <button type="button" class="menu-item" data-view="satellite-map" aria-pressed="false">
+                    <span class="icon">🛰️</span>
+                    <span>Live Satellite Map</span>
+                </button>
+                <button type="button" class="menu-item" data-view="analytics" aria-pressed="false">
+                    <span class="icon">📈</span>
+                    <span>Analytics</span>
+                </button>
+                <button type="button" class="menu-item" data-view="reports" aria-pressed="false">
+                    <span class="icon">📋</span>
+                    <span>Alert Reports</span>
+                </button>
+            </div>
+
+            <!-- Overlays Control -->
+            <div class="sidebar-menu-group">
+                <div class="menu-label">Map Overlays</div>
+                <div class="layer-controls-box">
+                    <label class="layer-toggle">
+                        <span>🌧️ Cloud Cover</span>
+                        <input type="checkbox" id="dash-cloud-toggle">
+                    </label>
+                    <label class="layer-toggle">
+                        <span>💨 Pollution / Haze</span>
+                        <input type="checkbox" id="dash-pollution-toggle">
+                    </label>
+                    <label class="layer-toggle">
+                        <span>🔥 Fire Hotspots</span>
+                        <input type="checkbox" id="dash-fire-toggle" checked>
+                    </label>
+                    <label class="layer-toggle">
+                        <span>⚠️ Deforestation Markers</span>
+                        <input type="checkbox" id="dash-loss-toggle" checked>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Quick Region Coordinates -->
+            <div class="sidebar-menu-group">
+                <div class="menu-label">Target Coordinates</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); padding: 0 10px;">
+                    <div>Lat: <span id="dash-coord-lat" style="color: #fff; font-weight: 600;">22.5000° N</span></div>
+                    <div>Lng: <span id="dash-coord-lng" style="color: #fff; font-weight: 600;">82.5000° E</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center Leaflet Map -->
+        <div class="dash-map-wrap">
+            <div id="dash-map"></div>
+
+            <!-- Map Floating Color Legend -->
+            <div class="map-legend-overlay">
+                <div class="legend-title">Scatter Markers Legend</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-color color-forest"></span>
+                        <span>Dense Canopy</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color color-loss"></span>
+                        <span>Tree Loss Alert</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color color-fire"></span>
+                        <span>Thermal Hotspot</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color color-regrowth"></span>
+                        <span>Regrowth</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Dynamic Stats & Trends -->
+        <aside class="dash-stats-panel">
+
+            <!-- Card 1: Forest Cover Percentage -->
+            <div class="stats-card">
+                <div class="stats-card-header">
+                    <div class="stats-card-title">🌲 Forest Cover</div>
+                    <span class="stats-pill pill-green" id="stat-canopy-badge">Healthy</span>
+                </div>
+                <div class="big-stat-val" id="stat-cover-pct">72.4%</div>
+                <div class="stat-subtext">Total classified forest canopy in selected bounds</div>
+                <div class="mini-progress-bar">
+                    <div class="prog-forest" id="stat-prog-forest" style="width: 72.4%;"></div>
+                    <div class="prog-nonforest" id="stat-prog-nonforest" style="width: 27.6%;"></div>
+                </div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Forest Area</span>
+                    <span class="stat-val-right" id="stat-forest-ha">7,746,200 ha</span>
+                </div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Non-Forest</span>
+                    <span class="stat-val-right" id="stat-nonforest-ha">2,953,800 ha</span>
+                </div>
+            </div>
+
+            <!-- Card 2: Detected Change -->
+            <div class="stats-card">
+                <div class="stats-card-header">
+                    <div class="stats-card-title">⚠️ Detected Change</div>
+                    <span class="stats-pill pill-danger" id="stat-change-badge">Alert</span>
+                </div>
+                <div class="big-stat-val" style="color: #ef4444;" id="stat-change-val">-12.4%</div>
+                <div class="stat-subtext">Net change observed over 2016–2026 trajectory</div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Lost Canopy</span>
+                    <span class="stat-val-right" style="color: #ef4444;" id="stat-lost-ha">3,245 ha</span>
+                </div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Gained / Regrowth</span>
+                    <span class="stat-val-right" style="color: #4ade80;" id="stat-gained-ha">612 ha</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Decadal Trend Chart -->
+            <div class="stats-card">
+                <div class="stats-card-header">
+                    <div class="stats-card-title">📈 10-Year Trajectory</div>
+                </div>
+                <div class="trend-chart-container" style="position: relative; height: 180px; width: 100%;">
+                    <canvas id="dash-trend-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Card 4: Environmental Context -->
+            <div class="stats-card">
+                <div class="stats-card-header">
+                    <div class="stats-card-title">☁️ Environmental Context</div>
+                </div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Air Quality Index</span>
+                    <span class="stat-val-right" id="stat-aqi-val">42 (Good)</span>
+                </div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Active Fire Count</span>
+                    <span class="stat-val-right" id="stat-fire-count">18 Hotspots</span>
+                </div>
+                <div class="stat-breakdown-row">
+                    <span class="stat-label-left">Avg Temperature</span>
+                    <span class="stat-val-right" id="stat-temp-val">28.4 °C</span>
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- ==================== DETAILED ANALYSIS OVERLAY (Screen 3) ==================== -->
+    <div id="analysis-view" class="analysis-overlay hidden">
+        <button class="analysis-close" id="analysis-close" aria-label="Close analysis">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Back to Dashboard</span>
+        </button>
+
+        <div class="analysis-container">
+            <!-- A. Left Sidebar -->
+            <aside class="analysis-sidebar">
+                <div class="sidebar-section">
+                    <h4>📍 Region Details</h4>
+                    <div class="region-info">
+                        <p class="region-name" id="an-region-name">Select a location</p>
+                        <p class="region-state" id="an-region-state">—</p>
+                        <p class="region-area" id="an-region-area">—</p>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>🌡️ Air Quality</h4>
+                    <div class="aqi-gauge-container">
+                        <div class="aqi-gauge">
+                            <div class="aqi-gauge-fill" id="an-aqi-fill"></div>
+                            <div class="aqi-gauge-label">
+                                <span class="aqi-big" id="an-aqi-value">—</span>
+                                <span class="aqi-text" id="an-aqi-label">AQI</span>
+                            </div>
+                        </div>
+                        <div class="aqi-scale">
+                            <span class="aqi-good">Good</span>
+                            <span class="aqi-moderate">Moderate</span>
+                            <span class="aqi-poor">Poor</span>
+                            <span class="aqi-severe">Severe</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>☁️ Climate Data</h4>
+                    <div class="climate-mini-grid">
+                        <div class="climate-mini">
+                            <span>🌡️</span>
+                            <span id="an-temp">—°C</span>
+                        </div>
+                        <div class="climate-mini">
+                            <span>💧</span>
+                            <span id="an-humidity">—%</span>
+                        </div>
+                        <div class="climate-mini">
+                            <span>🌧️</span>
+                            <span id="an-rainfall">— mm</span>
+                        </div>
+                        <div class="climate-mini">
+                            <span>💨</span>
+                            <span id="an-wind">— km/h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>📈 Forest Cover Trend</h4>
+                    <div class="chart-container">
+                        <canvas id="forest-chart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <span class="legend-item gain">● Forest Gain</span>
+                        <span class="legend-item loss">● Forest Loss</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h4>📅 Key Events</h4>
+                    <div class="events-timeline" id="events-timeline" aria-live="polite"></div>
+                </div>
+            </aside>
+
+            <!-- B. Main Visualizer -->
+            <div class="analysis-main">
+                <!-- Comparison Header -->
+                <div class="comparison-header">
+                    <div class="pane-label then-label">
+                        <span class="pane-tag">THEN</span>
+                        <input type="date" id="then-date" class="date-input" value="2018-01-15">
+                    </div>
+                    <div class="pane-label now-label">
+                        <span class="pane-tag">NOW</span>
+                        <input type="date" id="now-date" class="date-input">
+                    </div>
+                </div>
+
+                <!-- Split View Container -->
+                <div class="split-view-container">
+                    <div class="split-pane then-pane">
+                        <div id="then-map" class="split-map"></div>
+                    </div>
+                    <div class="split-divider" id="split-divider">
+                        <div class="divider-line"></div>
+                        <div class="divider-handle">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M8 5l-5 7 5 7M16 5l5 7-5 7" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="divider-line"></div>
+                    </div>
+                    <div class="split-pane now-pane">
+                        <div id="now-map" class="split-map"></div>
+                    </div>
+
+                    <!-- Overlay Toggles (over the imagery) -->
+                    <div class="overlay-toggles">
+                        <label class="overlay-checkbox" id="overlay-clouds">
+                            <input type="checkbox" id="clouds-toggle">
+                            <span class="overlay-label">Clouds</span>
+                        </label>
+                        <label class="overlay-checkbox" id="overlay-pollution">
+                            <input type="checkbox" id="pollution-toggle">
+                            <span class="overlay-label">Pollution</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- C. Action Bar -->
+                <div class="action-bar">
+                    <div class="action-box" id="geo-action-box">
+                        <div class="action-box-icon">📍</div>
+                        <div class="action-box-title">Geospatial Coordinates</div>
+                        <div class="action-box-content">
+                            <div class="geo-row">
+                                <span>Latitude</span>
+                                <span class="geo-val" id="detail-lat">—</span>
+                            </div>
+                            <div class="geo-row">
+                                <span>Longitude</span>
+                                <span class="geo-val" id="detail-lng">—</span>
+                            </div>
+                            <div class="geo-row">
+                                <span>Elevation</span>
+                                <span class="geo-val" id="detail-alt">— m</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-box" id="enhance-action-box">
+                        <div class="action-box-icon">🔍</div>
+                        <div class="action-box-title">Enhance Resolution</div>
+                        <div class="action-box-content">
+                            <p class="enhance-desc">Visual enhancement preview (not AI upscaling)</p>
+                            <button class="enhance-btn" id="enhance-btn">
+                                <span class="enhance-btn-text">Upscale Imagery</span>
+                                <span class="enhance-spinner hidden" id="enhance-spinner"></span>
+                            </button>
+                            <div class="enhance-status" id="enhance-status"></div>
+                        </div>
+                    </div>
+
+                    <div class="action-box" id="timelapse-action-box">
+                        <div class="action-box-icon">⏯️</div>
+                        <div class="action-box-title">Historical Timelapse</div>
+                        <div class="action-box-content">
+                            <div class="tl-controls">
+                                <button class="tl-btn" id="tl-prev" title="Previous">⏮</button>
+                                <button class="tl-btn tl-play-btn" id="tl-play" title="Play/Pause">▶</button>
+                                <button class="tl-btn" id="tl-next" title="Next">⏭</button>
+                            </div>
+                            <div class="tl-progress">
+                                <input type="range" id="tl-slider" min="2016" max="2026" value="2016" step="1" class="tl-range">
+                                <div class="tl-years">
+                                    <span>2016</span>
+                                    <span id="tl-current-year">2016</span>
+                                    <span>2026</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Range Bar -->
+                <div class="date-range-bar">
+                    <div class="date-range-group">
+                        <label class="date-label">FROM</label>
+                        <input type="date" id="range-from" class="date-input" value="2018-01-01">
+                    </div>
+                    <div class="date-range-group">
+                        <label class="date-label">TO</label>
+                        <input type="date" id="range-to" class="date-input">
+                    </div>
+                    <button class="btn btn-primary compare-btn" id="compare-btn">
+                        Compare Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <div class="toast-icon" id="toast-icon">ℹ️</div>
+        <div class="toast-message" id="toast-message"></div>
+        <button class="toast-close" id="toast-close">✕</button>
+    </div>
+
+    <!-- Leaflet JS & Chart.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <!-- App Config & Dashboard Script -->
+    <script src="js/config.js"></script>
+    <script src="js/theme.js"></script>
+    <script src="js/coordinates.js"></script>
+    <script src="js/satellite.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/fires.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/analysis.js"></script>
+    <script src="js/timelapse.js"></script>
+    <script src="js/ai-enhance.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
